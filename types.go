@@ -11,7 +11,9 @@ func shell(item *systray.MenuItem, menu menu) {
 	for {
 		select {
 		case <-item.ClickedCh:
-			execCmd(menu.Values)
+			for _, she := range menu.Values {
+				execCmd(she)
+			}
 		}
 	}
 }
@@ -25,22 +27,20 @@ func builtin(item *systray.MenuItem, menu menu) {
 	}
 }
 
-func execCmd(args []string) []byte {
+func execCmd(arg string) []byte {
 	var result []byte
 	var osExec = "/bin/sh"
 	if runtime.GOOS == "windows" {
 		osExec = "cmd"
 	}
-	for _, arg := range args {
-		var ret []byte
-		switch runtime.GOOS {
-		case "windows":
-			ret, _ = exec.Command(osExec, "-c", arg).Output()
-		default:
-			ret, _ = exec.Command(osExec, "-c", arg).Output()
-		}
-		result = append(result, ret...)
+	var ret []byte
+	switch runtime.GOOS {
+	case "windows":
+		ret, _ = exec.Command(osExec, "-c", arg).Output()
+	default:
+		ret, _ = exec.Command(osExec, "-c", arg).Output()
 	}
+	result = append(result, ret...)
 	return result
 }
 
@@ -51,13 +51,15 @@ func service(item *systray.MenuItem, menu menu) {
 	start.SetIcon(getIcon("start"))
 	restart := item.AddSubMenuItem("重启", "")
 	restart.Disable()
+	stop := item.AddSubMenuItem("停止", "")
+	stop.Disable()
 	var f = func() {
 		pid := getPid(menu.Pid)
 		if pid != "" {
 			status.SetTitle("已启动(Pid:" + pid + ")")
 			item.SetIcon(getIcon("running"))
-			start.SetTitle("停止服务")
 			restart.Disabled()
+			stop.Disabled()
 		} else {
 			item.SetIcon(getIcon("stop"))
 			status.SetTitle("未启动")
@@ -73,10 +75,12 @@ func service(item *systray.MenuItem, menu menu) {
 	for {
 		select {
 		case <-item.ClickedCh:
-			execCmd(menu.Values)
-			f()
 		case <-restart.ClickedCh:
+			execCmd(menu.Values[2])
+			f()
 		case <-start.ClickedCh:
+			execCmd(menu.Values[0])
+			f()
 		}
 	}
 }
