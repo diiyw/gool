@@ -1,0 +1,23 @@
+name: Gool
+menus:
+  - {
+    title: Nginx服务,
+    type: service,
+    pid: /usr/local/var/run/nginx.pid,
+    values: ["brew service start nginx","brew service restart nginx","brew service stop nginx"]
+  }
+  - {
+    title: 清除Swoole残留,
+    type: shell,
+    values: ["ps -ef | grep '7.4.11/bin/php' | grep -v grep | awk '{print $2}' | xargs kill -9"]
+  }
+  - {
+    title: 打开Google网页,
+    type: builtin,
+    values: ["openLink","https://www.google.com"],
+  }
+  - {
+    title: 复制当前时间戳,
+    type: builtin,
+    values: ["copyTimestamp"],
+  }
