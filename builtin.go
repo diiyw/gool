@@ -126,26 +126,26 @@ func execCmd(arg string) []byte {
 
 func service(item *systray.MenuItem, menu menu) {
 	item.SetIcon(getIcon("stop"))
-	status := item.AddSubMenuItem("未启动", "")
-	start := item.AddSubMenuItem("启动服务", "")
+	status := item.AddSubMenuItem("Not start", "")
+	start := item.AddSubMenuItem("Start", "")
 	start.SetIcon(getIcon("start"))
-	restart := item.AddSubMenuItem("重启", "")
+	restart := item.AddSubMenuItem("Restart", "")
 	restart.SetIcon(getIcon("restart"))
 	restart.Disable()
-	stop := item.AddSubMenuItem("停止", "")
+	stop := item.AddSubMenuItem("Stop", "")
 	stop.SetIcon(getIcon("termination"))
 	stop.Disable()
 	var f = func(restart, stop *systray.MenuItem) {
 		pid := getPid(menu.Pid)
 		if pid != "" {
-			status.SetTitle("已启动(Pid:" + pid + ")")
+			status.SetTitle("Started(Pid:" + pid + ")")
 			item.SetIcon(getIcon("running"))
 			restart.Enable()
 			stop.Enable()
 			start.Disable()
 		} else {
 			item.SetIcon(getIcon("stop"))
-			status.SetTitle("未启动")
+			status.SetTitle("Not start")
 			start.Enable()
 			stop.Disable()
 			restart.Disable()
