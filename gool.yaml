@@ -4,20 +4,32 @@ menus:
     title: Nginx服务,
     type: service,
     pid: /usr/local/var/run/nginx.pid,
-    values: ["brew service start nginx","brew service restart nginx","brew service stop nginx"]
+    values: [ "brew services start nginx", "brew services restart nginx", "brew services stop nginx" ]
   }
   - {
     title: 清除Swoole残留,
     type: shell,
-    values: ["ps -ef | grep '7.4.11/bin/php' | grep -v grep | awk '{print $2}' | xargs kill -9"]
+    values: [ "ps -ef | grep '7.4.11/bin/php' | grep -v grep | awk '{print $2}' | xargs kill -9" ]
   }
   - {
     title: 打开Google网页,
-    type: builtin,
-    values: ["openLink","https://www.google.com"],
+    type: shell,
+    values: [ "open https://www.google.com" ],
   }
   - {
-    title: 复制当前时间戳,
-    type: builtin,
-    values: ["copyTimestamp"],
+    title: 复制时间,
+    menus: [
+      { title: Today,status: disable},
+      { title: 日期,type: copy, values: [ "date" ] },
+      { title: 时间戳,type: copy, values: [ "timestamp" ] },
+      { title: 日期时间,type: copy,values: [ "datetime" ] },
+      { title: Yesterday,status: disable},
+      { title: 日期,type: copy, values: [ "yesterday_date" ] },
+      { title: 时间戳,type: copy, values: [ "yesterday_timestamp" ] },
+      { title: 日期时间,type: copy,values: [ "yesterday_datetime" ] },
+      { title: Tomorrow,status: disable},
+      { title: 日期,type: copy, values: [ "tomorrow_date" ] },
+      { title: 时间戳,type: copy, values: [ "tomorrow_timestamp" ] },
+      { title: 日期时间,type: copy,values: [ "tomorrow_datetime" ] }
+    ]
   }

@@ -1,6 +1,8 @@
-package gool
+package main
+
+import "os/exec"
 
 func goUrl(v string) {
-	cmd := exec.Command("start", v)
+	cmd := exec.Command("open", v)
 	_ = cmd.Run()
 }
