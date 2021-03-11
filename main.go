@@ -7,13 +7,13 @@ import (
 )
 
 type menu struct {
-	Title  string   `yaml:"title"`
-	Type   string   `yaml:"type"`
-	Values []string `yaml:"values"`
-	Tip    string   `yaml:"tip"`
-	Pid    string   `yaml:"pid"`
-	Status string   `yaml:"status"`
-	Menus  []menu   `yaml:"menus"`
+	Title   string   `yaml:"title"`
+	Type    string   `yaml:"type"`
+	Values  []string `yaml:"values"`
+	Tooltip string   `yaml:"tip"`
+	Pid     string   `yaml:"pid"`
+	Status  string   `yaml:"status"`
+	Menus   []menu   `yaml:"menus"`
 }
 
 var menuConfig struct {
@@ -32,25 +32,31 @@ func main() {
 }
 
 func ready() {
-	gotray.SetIcon(getIcon("gool"))
+	_ = gotray.SetIcon(getIcon("gool"))
 	for _, menu := range menuConfig.Menus {
-		m := gotray.NewMenu().SetTitle(menu.Title).SetTooltip(menu.Tip)
+		m := gotray.NewMenu().SetTitle(menu.Title).SetTooltip(menu.Tooltip)
 		if menu.Status != "" {
 			m.Disable()
 		}
-		gotray.AddMenu(m)
+		switch menu.Type {
+		case "shell":
+			shell(m, menu)
+		case "service":
+			service(m, menu)
+		}
 		if len(menu.Menus) > 0 {
-			for _, subMenu := range menu.Menus {
-				sub := gotray.NewMenu().SetTitle(subMenu.Title).SetTooltip(subMenu.Tip)
-				m.AddSubMenu(sub)
-				if subMenu.Status != "" {
+			for _, child := range menu.Menus {
+				sub := gotray.NewMenu().SetTitle(child.Title).SetTooltip(child.Tooltip)
+				if child.Status != "" {
 					sub.Disable()
 				}
-				continue
+				m.AddSubMenu(sub)
 			}
 		}
+		gotray.AddMenu(m)
 	}
-	gotray.AddMenu(gotray.NewMenu().SetTitle("Exit").Click(func() {
-		os.Exit(0)
-	}))
+	exit := gotray.NewMenu().SetTitle("Exit").Click(func() {
+		gotray.Exit()
+	})
+	gotray.AddMenu(exit)
 }

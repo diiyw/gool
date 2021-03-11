@@ -62,13 +62,13 @@ func execCmd(arg string) []byte {
 }
 
 func service(m *gotray.Menu, menu menu) {
-	m.SetIcon(getIcon("stop"))
+	m.SetIcon(getIcon("sleep"))
 	status := gotray.NewMenu().SetTitle("Not Start")
 	start := gotray.NewMenu().SetTitle("Start").SetIcon(getIcon("start"))
 	start.Click(func() {
 		execCmd(menu.Values[0])
 	})
-	restart := gotray.NewMenu().SetTitle("Restart").SetIcon(getIcon("Restart"))
+	restart := gotray.NewMenu().SetTitle("Restart").SetIcon(getIcon("restart"))
 	restart.Click(func() {
 		execCmd(menu.Values[1])
 	})
@@ -76,18 +76,19 @@ func service(m *gotray.Menu, menu menu) {
 	stop.Click(func() {
 		execCmd(menu.Values[2])
 	})
+	m.AddSubMenu(status, start, restart, stop)
 	var f = func(restart, stop *gotray.Menu) {
 		pid := getPid(menu.Pid)
 		if pid != "" {
 			status.SetTitle("Started(Pid:" + pid + ")")
 			m.SetIcon(getIcon("running"))
-			//restart.Enable()
-			//stop.Enable()
+			restart.Enable()
+			stop.Enable()
 			start.Disable()
 		} else {
 			m.SetIcon(getIcon("stop"))
 			status.SetTitle("Not start")
-			//start.Enable()
+			start.Enable()
 			stop.Disable()
 			restart.Disable()
 		}
