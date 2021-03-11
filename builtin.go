@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/atotto/clipboard"
-	"github.com/getlantern/systray"
+	"github.com/diiyw/gotray"
 	"github.com/golang-module/carbon"
 	"os/exec"
 	"runtime"
@@ -10,101 +10,38 @@ import (
 	"time"
 )
 
-func shell(item *systray.MenuItem, menu menu) {
-	for {
-		select {
-		case <-item.ClickedCh:
-			for _, she := range menu.Values {
-				execCmd(she)
-			}
+func shell(m *gotray.Menu, menu menu) {
+	m.Click(func() {
+		for _, she := range menu.Values {
+			execCmd(she)
 		}
-	}
+	})
 }
 
-func clipboardCopy(item *systray.MenuItem, menu menu) {
-	switch menu.Values[0] {
-	case "timestamp":
-		go func() {
-			for {
-				select {
-				case <-item.ClickedCh:
-					_ = clipboard.WriteAll(strconv.FormatInt(carbon.Now().ToTimestamp(), 10))
-				}
-			}
-		}()
-	case "date":
-		go func() {
-			for {
-				select {
-				case <-item.ClickedCh:
-					_ = clipboard.WriteAll(carbon.Now().ToDateString())
-				}
-			}
-		}()
-	case "datetime":
-		go func() {
-			for {
-				select {
-				case <-item.ClickedCh:
-					_ = clipboard.WriteAll(carbon.Now().ToDateTimeString())
-				}
-			}
-		}()
-	case "yesterday_timestamp":
-		go func() {
-			for {
-				select {
-				case <-item.ClickedCh:
-					_ = clipboard.WriteAll(strconv.FormatInt(carbon.Yesterday().ToTimestamp(), 10))
-				}
-			}
-		}()
-	case "yesterday_date":
-		go func() {
-			for {
-				select {
-				case <-item.ClickedCh:
-					_ = clipboard.WriteAll(carbon.Yesterday().ToDateString())
-				}
-			}
-		}()
-	case "yesterday_datetime":
-		go func() {
-			for {
-				select {
-				case <-item.ClickedCh:
-					_ = clipboard.WriteAll(carbon.Yesterday().ToDateTimeString())
-				}
-			}
-		}()
-	case "tomorrow_timestamp":
-		go func() {
-			for {
-				select {
-				case <-item.ClickedCh:
-					_ = clipboard.WriteAll(strconv.FormatInt(carbon.Tomorrow().ToTimestamp(), 10))
-				}
-			}
-		}()
-	case "tomorrow_date":
-		go func() {
-			for {
-				select {
-				case <-item.ClickedCh:
-					_ = clipboard.WriteAll(carbon.Tomorrow().ToDateString())
-				}
-			}
-		}()
-	case "tomorrow_datetime":
-		go func() {
-			for {
-				select {
-				case <-item.ClickedCh:
-					_ = clipboard.WriteAll(carbon.Tomorrow().ToDateTimeString())
-				}
-			}
-		}()
-	}
+func clipboardCopy(m *gotray.Menu, menu menu) {
+	m.Click(func() {
+		switch menu.Values[0] {
+		case "timestamp":
+			_ = clipboard.WriteAll(strconv.FormatInt(carbon.Now().ToTimestamp(), 10))
+		case "date":
+			_ = clipboard.WriteAll(carbon.Now().ToDateString())
+		case "datetime":
+			_ = clipboard.WriteAll(carbon.Now().ToDateTimeString())
+		case "yesterday_timestamp":
+			_ = clipboard.WriteAll(strconv.FormatInt(carbon.Yesterday().ToTimestamp(), 10))
+		case "yesterday_date":
+			_ = clipboard.WriteAll(carbon.Yesterday().ToDateString())
+		case "yesterday_datetime":
+			_ = clipboard.WriteAll(carbon.Yesterday().ToDateTimeString())
+		case "tomorrow_timestamp":
+			_ = clipboard.WriteAll(strconv.FormatInt(carbon.Tomorrow().ToTimestamp(), 10))
+		case "tomorrow_date":
+			_ = clipboard.WriteAll(carbon.Tomorrow().ToDateString())
+		case "tomorrow_datetime":
+			_ = clipboard.WriteAll(carbon.Tomorrow().ToDateTimeString())
+		}
+	})
+
 }
 
 func execCmd(arg string) []byte {
@@ -124,29 +61,33 @@ func execCmd(arg string) []byte {
 	return result
 }
 
-func service(item *systray.MenuItem, menu menu) {
-	item.SetIcon(getIcon("stop"))
-	status := item.AddSubMenuItem("Not start", "")
-	start := item.AddSubMenuItem("Start", "")
-	start.SetIcon(getIcon("start"))
-	restart := item.AddSubMenuItem("Restart", "")
-	restart.SetIcon(getIcon("restart"))
-	restart.Disable()
-	stop := item.AddSubMenuItem("Stop", "")
-	stop.SetIcon(getIcon("termination"))
-	stop.Disable()
-	var f = func(restart, stop *systray.MenuItem) {
+func service(m *gotray.Menu, menu menu) {
+	m.SetIcon(getIcon("stop"))
+	status := gotray.NewMenu().SetTitle("Not Start")
+	start := gotray.NewMenu().SetTitle("Start").SetIcon(getIcon("start"))
+	start.Click(func() {
+		execCmd(menu.Values[0])
+	})
+	restart := gotray.NewMenu().SetTitle("Restart").SetIcon(getIcon("Restart"))
+	restart.Click(func() {
+		execCmd(menu.Values[1])
+	})
+	stop := gotray.NewMenu().SetTitle("Stop").SetIcon(getIcon("stop"))
+	stop.Click(func() {
+		execCmd(menu.Values[2])
+	})
+	var f = func(restart, stop *gotray.Menu) {
 		pid := getPid(menu.Pid)
 		if pid != "" {
 			status.SetTitle("Started(Pid:" + pid + ")")
-			item.SetIcon(getIcon("running"))
-			restart.Enable()
-			stop.Enable()
+			m.SetIcon(getIcon("running"))
+			//restart.Enable()
+			//stop.Enable()
 			start.Disable()
 		} else {
-			item.SetIcon(getIcon("stop"))
+			m.SetIcon(getIcon("stop"))
 			status.SetTitle("Not start")
-			start.Enable()
+			//start.Enable()
 			stop.Disable()
 			restart.Disable()
 		}
@@ -159,15 +100,4 @@ func service(item *systray.MenuItem, menu menu) {
 			f(restart, stop)
 		}
 	}()
-	for {
-		select {
-		case <-item.ClickedCh:
-		case <-restart.ClickedCh:
-			execCmd(menu.Values[1])
-		case <-start.ClickedCh:
-			execCmd(menu.Values[0])
-		case <-stop.ClickedCh:
-			execCmd(menu.Values[2])
-		}
-	}
 }

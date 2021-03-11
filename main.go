@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/getlantern/systray"
+	"github.com/diiyw/gotray"
 	"gopkg.in/yaml.v2"
 	"os"
 )
@@ -28,52 +28,29 @@ func main() {
 	if err := yaml.Unmarshal(conf, &menuConfig); err != nil {
 		panic(err)
 	}
-	systray.Run(onReady, onExit)
+	gotray.Run(ready)
 }
 
-func onReady() {
-	systray.SetIcon(getIcon("gool"))
-	systray.SetTooltip("超级好用自定义的工具集")
-
-	var hook = func(item *systray.MenuItem, m menu) {
-		switch m.Type {
-		case "line":
-		case "service":
-			go service(item, m)
-		case "copy":
-			go clipboardCopy(item, m)
-		default:
-			go shell(item, m)
-		}
-	}
-
+func ready() {
+	gotray.SetIcon(getIcon("gool"))
 	for _, menu := range menuConfig.Menus {
-		m := systray.AddMenuItem(menu.Title, menu.Tip)
+		m := gotray.NewMenu().SetTitle(menu.Title).SetTooltip(menu.Tip)
 		if menu.Status != "" {
 			m.Disable()
 		}
+		gotray.AddMenu(m)
 		if len(menu.Menus) > 0 {
 			for _, subMenu := range menu.Menus {
-				sub := m.AddSubMenuItem(subMenu.Title, subMenu.Tip)
+				sub := gotray.NewMenu().SetTitle(subMenu.Title).SetTooltip(subMenu.Tip)
+				m.AddSubMenu(sub)
 				if subMenu.Status != "" {
 					sub.Disable()
 				}
-				hook(sub, subMenu)
 				continue
 			}
 		}
-		hook(m, menu)
 	}
-	systray.AddSeparator()
-	mQuit := systray.AddMenuItem("退出", "退出Gool")
-	go func() {
-		select {
-		case <-mQuit.ClickedCh:
-			systray.Quit()
-		}
-	}()
-}
-
-func onExit() {
-
+	gotray.AddMenu(gotray.NewMenu().SetTitle("Exit").Click(func() {
+		os.Exit(0)
+	}))
 }
